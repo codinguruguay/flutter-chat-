@@ -1,7 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat/widgets/custom_button.dart';
 import 'package:flutter_chat/widgets/custom_input.dart';
+import 'package:provider/provider.dart';
 
+import '../helpers/show_alert.dart';
+import '../services/auth_service.dart';
 import '../widgets/labels.dart';
 import '../widgets/logo.dart';
 
@@ -53,6 +57,8 @@ class __FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 30.0),
       child: Column(
@@ -75,7 +81,36 @@ class __FormState extends State<_Form> {
             isPassword: true,
             textEditingController: passwordController,
           ),
-          CustomButton(text: 'Registrarme', onPressed: () {})
+          CustomButton(
+              backgroundColor:
+                  authService.startAuth ? Colors.black38 : Colors.black,
+              text: authService.startAuth
+                  ? const CupertinoActivityIndicator(color: Colors.white)
+                  : const Text(
+                      'Crear cuenta',
+                      style: TextStyle(color: Colors.white, fontSize: 16.0),
+                    ),
+              onPressed: authService.startAuth
+                  ? null
+                  : () async {
+                      FocusScope.of(context).unfocus();
+
+                      final resultRegister = await authService.register(
+                          nameController.text.trim(),
+                          emailController.text.trim(),
+                          passwordController.text.trim());
+
+                      if (resultRegister == true) {
+                        // CONECTAR A NUESTRO SOCKET SERVER
+
+                        // ignore: use_build_context_synchronously
+                        Navigator.pushReplacementNamed(context, 'usersPage');
+                      } else {
+                        // ignore: use_build_context_synchronously
+                        showAlert(context, 'Error al crear cuenta',
+                            '$resultRegister');
+                      }
+                    })
         ],
       ),
     );
